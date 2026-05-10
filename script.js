@@ -10,7 +10,10 @@
  */
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────────
-const API_URL = 'http://localhost:3001/convert';
+// Auto-detect API URL: localhost for dev, same origin on Vercel
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3001/convert'
+  : `${window.location.origin}/convert`;
 
 // ─── STATE ─────────────────────────────────────────────────────────────────────
 let steps = [];
