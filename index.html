@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Regex → NFA | Thompson's Construction</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="auth-nfa.css" />
+  <!-- Auth guard: redirect to login if not authenticated -->
+  <script>
+    (function() {
+      if (!localStorage.getItem('nfa_token')) {
+        window.location.href = 'login.html';
+      }
+    })();
+  </script>
+  <!-- vis-network for NFA graph -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css"/>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">∑</span>
+      <div>
+        <h1>Thompson NFA</h1>
+        <p>Regex → NFA via Thompson's Construction</p>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="badge">Shunting-Yard</span>
+      <span class="badge accent">Thompson's Algorithm</span>
+    </div>
+    <!-- User info bar -->
+    <div class="user-bar" id="userBar">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <span class="user-name" id="userName">User</span>
+      <button class="btn-logout" id="logoutBtn" onclick="nfaLogout()">LOGOUT</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main class="main">
+
+  <!-- INPUT CARD -->
+  <section class="card input-card">
+    <div class="card-header">
+      <span class="card-icon">⌥</span>
+      <h2>Regular Expression Input</h2>
+    </div>
+
+    <div class="input-group">
+      <label for="regexInput">Enter Regex</label>
+      <div class="input-row">
+        <input
+          id="regexInput"
+          type="text"
+          placeholder="e.g. (a|b)*c  or  a+b?c"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="convertBtn" class="btn btn-primary">Convert</button>
+        <button id="resetBtn" class="btn btn-ghost">Reset</button>
+      </div>
+      <div id="inputError" class="input-error hidden"></div>
+    </div>
+
+    <!-- Quick examples -->
+    <div class="examples">
+      <span class="examples-label">Try:</span>
+      <button class="example-chip" data-val="(a|b)*c">(a|b)*c</button>
+      <button class="example-chip" data-val="a*b+c">a*b+c</button>
+      <button class="example-chip" data-val="(ab|cd)*">(ab|cd)*</button>
+      <button class="example-chip" data-val="a?(b|c)">a?(b|c)</button>
+      <button class="example-chip" data-val="(a|b|c)+d">(a|b|c)+d</button>
+    </div>
+
+    <!-- Speed control -->
+    <div class="speed-row">
+      <label for="speedSlider">Animation Speed</label>
+      <input type="range" id="speedSlider" min="200" max="2000" value="900" step="100"/>
+      <span id="speedLabel">Normal</span>
+    </div>
+  </section>
+
+  <!-- LOADING -->
+  <div id="loader" class="loader hidden">
+    <div class="spinner"></div>
+    <span>Building NFA…</span>
+  </div>
+
+  <!-- POSTFIX OUTPUT -->
+  <section id="postfixSection" class="card result-card hidden">
+    <div class="card-header">
+      <span class="card-icon">→</span>
+      <h2>Conversion Results</h2>
+    </div>
+    <div class="result-grid">
+      <div class="result-item">
+        <label>With Explicit Concatenation (.)</label>
+        <code id="concatOutput" class="mono-box"></code>
+      </div>
+      <div class="result-item">
+        <label>Postfix Expression</label>
+        <code id="postfixOutput" class="mono-box accent-box"></code>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEPS ANIMATION -->
+  <section id="stepsSection" class="card steps-card hidden">
+    <div class="card-header">
+      <span class="card-icon">▶</span>
+      <h2>Step-by-Step Construction</h2>
+      <div class="step-controls">
+        <button id="playPauseBtn" class="btn btn-sm btn-outline">⏸ Pause</button>
+        <button id="prevStepBtn" class="btn btn-sm btn-ghost">◀ Prev</button>
+        <button id="nextStepBtn" class="btn btn-sm btn-ghost">Next ▶</button>
+      </div>
+    </div>
+
+    <div class="step-progress-bar">
+      <div id="stepProgress" class="step-progress-fill"></div>
+    </div>
+
+    <div id="stepsContainer" class="steps-list"></div>
+  </section>
+
+  <!-- NFA GRAPH -->
+  <section id="graphSection" class="card graph-card hidden">
+    <div class="card-header">
+      <span class="card-icon">◉</span>
+      <h2>NFA Graph Visualization</h2>
+      <div class="graph-controls">
+        <button id="exportBtn" class="btn btn-sm btn-outline">⬇ Export PNG</button>
+        <button id="fitBtn" class="btn btn-sm btn-ghost">⊞ Fit Graph</button>
+      </div>
+    </div>
+
+    <div class="graph-legend">
+      <span class="legend-item"><span class="legend-dot start-dot"></span>Start State</span>
+      <span class="legend-item"><span class="legend-dot accept-dot"></span>Accept State</span>
+      <span class="legend-item"><span class="legend-dot normal-dot"></span>Normal State</span>
+      <span class="legend-item"><span class="legend-line eps-line"></span>ε-transition</span>
+    </div>
+
+    <div id="nfaGraph" class="graph-container"></div>
+
+    <!-- NFA table -->
+    <div id="transitionTable" class="transition-table-wrap"></div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  Thompson's Construction Algorithm · Shunting-Yard · NFA Visualization
+</footer>
+
+<script src="script.js"></script>
+<script>
+  // Populate user bar from localStorage
+  (function() {
+    const name  = localStorage.getItem('nfa_user')  || 'User';
+    const token = localStorage.getItem('nfa_token');
+    if (!token) { window.location.href = 'login.html'; return; }
+    document.getElementById('userName').textContent = name;
+    document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+  })();
+
+  function nfaLogout() {
+    localStorage.removeItem('nfa_token');
+    localStorage.removeItem('nfa_user');
+    localStorage.removeItem('nfa_email');
+    window.location.href = 'login.html';
+  }
+</script>
+</body>
+</html>

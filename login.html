@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Sign in to access the Thompson NFA Converter."/>
+  <title>Login | Thompson NFA</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="auth-nfa.css" />
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <meta name="google-client-id" content="897219591703-cacosb0p3uur2jiluf73vl13vuudp8rk.apps.googleusercontent.com">
+</head>
+<body>
+
+<!-- floating orbs -->
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- brand -->
+<div class="brand">
+  <span class="brand-icon">∑</span>
+  <div>
+    <div class="brand-title">Thompson NFA</div>
+    <div class="brand-sub">Regex → NFA via Thompson's Construction</div>
+  </div>
+</div>
+
+<!-- auth card -->
+<div class="auth-card">
+
+  <!-- tab switcher -->
+  <div class="tab-switcher">
+    <button class="tab-btn active" id="loginTabBtn" onclick="showTab('login')">LOGIN</button>
+    <button class="tab-btn" id="registerTabBtn" onclick="showTab('register')">REGISTER</button>
+  </div>
+
+  <!-- alert -->
+  <div id="alertBox" class="alert-box d-none" role="alert"></div>
+
+  <!-- Google Sign-In button -->
+  <div class="google-btn-wrap">
+    <button type="button" class="btn-google" id="googleSignInBtn" onclick="triggerGoogleSignIn()">
+      <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      <span>Continue with Google</span>
+    </button>
+    <div class="divider"><span>or continue with email</span></div>
+  </div>
+
+  <!-- ── LOGIN FORM ── -->
+  <form id="loginForm" class="auth-form" novalidate>
+    <h2 class="form-title">Welcome Back</h2>
+    <p class="form-subtitle">// sign in to access the NFA converter</p>
+
+    <div class="form-group">
+      <label class="form-label" for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" class="nfa-input" placeholder="you@example.com" autocomplete="email" required/>
+      <div class="invalid-feedback" id="loginEmailError"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="loginPassword">Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="loginPassword" class="nfa-input" placeholder="Enter your password" autocomplete="current-password" required/>
+        <button type="button" class="pw-toggle" onclick="togglePw('loginPassword', this)" aria-label="Toggle password">👁</button>
+      </div>
+      <div class="invalid-feedback" id="loginPasswordError"></div>
+    </div>
+
+    <button type="submit" class="btn-submit" id="loginBtn">
+      <span class="btn-text">→ SIGN IN</span>
+      <span class="btn-loader d-none"><span class="spinner-sm"></span> Signing in…</span>
+    </button>
+
+    <p class="switch-text">
+      No account? <a href="#" class="form-link" onclick="showTab('register');return false;">Register here</a>
+    </p>
+  </form>
+
+  <!-- ── REGISTER FORM ── -->
+  <form id="registerForm" class="auth-form d-none" novalidate>
+    <h2 class="form-title">Create Account</h2>
+    <p class="form-subtitle">// join to start converting regex to NFA</p>
+
+    <div class="form-group">
+      <label class="form-label" for="regName">Full Name</label>
+      <input type="text" id="regName" class="nfa-input" placeholder="John Doe" autocomplete="name" required/>
+      <div class="invalid-feedback" id="regNameError"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="regEmail">Email</label>
+      <input type="email" id="regEmail" class="nfa-input" placeholder="you@example.com" autocomplete="email" required/>
+      <div class="invalid-feedback" id="regEmailError"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="regPassword">Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="regPassword" class="nfa-input" placeholder="Min. 6 chars with a number"
+               autocomplete="new-password" oninput="checkStrength(this.value)" required/>
+        <button type="button" class="pw-toggle" onclick="togglePw('regPassword', this)" aria-label="Toggle password">👁</button>
+      </div>
+      <div class="pw-strength" id="pwStrength">
+        <div class="strength-bars">
+          <div class="strength-bar" id="bar1"></div>
+          <div class="strength-bar" id="bar2"></div>
+          <div class="strength-bar" id="bar3"></div>
+          <div class="strength-bar" id="bar4"></div>
+        </div>
+        <span class="strength-text" id="strengthText">strength</span>
+      </div>
+      <div class="invalid-feedback" id="regPasswordError"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="regConfirm">Confirm Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="regConfirm" class="nfa-input" placeholder="Re-enter password" autocomplete="new-password" required/>
+        <button type="button" class="pw-toggle" onclick="togglePw('regConfirm', this)" aria-label="Toggle password">👁</button>
+      </div>
+      <div class="invalid-feedback" id="regConfirmError"></div>
+    </div>
+
+    <div class="terms-row">
+      <input type="checkbox" id="termsCheck" class="terms-check-input" required/>
+      <label class="terms-label" for="termsCheck">
+        I agree to the <a href="#" class="form-link">Terms</a> &amp; <a href="#" class="form-link">Privacy Policy</a>
+      </label>
+    </div>
+    <div class="invalid-feedback" id="termsError" style="margin-top:-12px;margin-bottom:12px;">You must agree to the terms.</div>
+
+    <button type="submit" class="btn-submit" id="registerBtn">
+      <span class="btn-text">→ CREATE ACCOUNT</span>
+      <span class="btn-loader d-none"><span class="spinner-sm"></span> Creating…</span>
+    </button>
+
+    <p class="switch-text">
+      Already registered? <a href="#" class="form-link" onclick="showTab('login');return false;">Sign in here</a>
+    </p>
+  </form>
+
+</div><!-- end auth-card -->
+
+<script src="auth-nfa.js"></script>
+</body>
+</html>
