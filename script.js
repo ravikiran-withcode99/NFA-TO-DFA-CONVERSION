@@ -10,9 +10,9 @@
  */
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────────
-// Auto-detect API URL: localhost for dev, same origin on Vercel
+// API URL: localhost for local development
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ? 'http://localhost:3001/convert'
+  ? 'http://localhost:5000/convert'
   : `${window.location.origin}/convert`;
 
 // ─── STATE ─────────────────────────────────────────────────────────────────────

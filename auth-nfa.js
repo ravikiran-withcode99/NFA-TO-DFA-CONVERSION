@@ -3,7 +3,7 @@
 // Connects to backend at http://localhost:5000/api
 // ============================================================
 
-// Auto-detect backend URL: uses current host on Vercel, localhost:5000 for local dev
+// Backend URL: localhost:5000 for local development
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000/api'
   : `${window.location.origin}/api`;
